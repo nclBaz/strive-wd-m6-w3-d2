@@ -32,6 +32,31 @@ usersRouter.post("/register", checkUserMiddleware, checkValidationResult, async 
   }
 })
 
+usersRouter.post("/login", async (req, res, next) => {
+  try {
+    // 1. We gonna extract the credentials from req.body
+    const { email, password } = req.body
+
+    // 2. We gonna verify them (bcrypt.compare for password)
+
+    const user = await UsersModel.checkCredentials(email, password)
+
+    // 3. We gonna generate a token if credentials are fine (if not 401 error)
+
+    if (user) {
+      // generate token
+      // 4. Send token as a response
+      res.send({ message: "Credentials OK!" })
+    } else {
+      // 401
+
+      next(createError(401, "Credentials are NOT ok!"))
+    }
+  } catch (error) {
+    next(error)
+  }
+})
+
 // 2.
 usersRouter.get("/", async (req, res, next) => {
   try {
