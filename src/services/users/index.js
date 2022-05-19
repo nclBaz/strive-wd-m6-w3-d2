@@ -21,14 +21,10 @@ const usersRouter = express.Router()
 // }
 
 // 1.
-usersRouter.post("/", checkUserMiddleware, checkValidationResult, async (req, res, next) => {
+usersRouter.post("/register", checkUserMiddleware, checkValidationResult, async (req, res, next) => {
   try {
-    // (req, res, next) => {} is the ENDPOINT HANDLER. Is the function that will be executed every time a request on that endpoint is sent. req and res are REQUEST and RESPONSE objects
-
-    console.log("REQUEST BODY: ", req.body)
-
-    const newUser = new UsersModel(req.body) // this is going to VALIDATE the req.body
-    const savedUser = await newUser.save() // This saves the validated body into the users' collection
+    const newUser = new UsersModel(req.body)
+    const savedUser = await newUser.save()
 
     res.send(savedUser)
   } catch (error) {
