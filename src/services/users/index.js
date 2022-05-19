@@ -12,6 +12,9 @@ import UsersModel from "./model.js"
 import { checkUserMiddleware, checkValidationResult } from "./validation.js"
 import BooksModel from "../books/model.js"
 import { sendEmail } from "../../lib/emails.js"
+import { generateJWTToken } from "../../lib/auth/tools.js"
+import { JWTAuthMiddleware } from "../../lib/auth/token.js"
+import { adminOnlyMiddleware } from "../../lib/auth/admin.js"
 
 const usersRouter = express.Router()
 
@@ -45,8 +48,12 @@ usersRouter.post("/login", async (req, res, next) => {
 
     if (user) {
       // generate token
+
+      const token = await generateJWTToken({ _id: user._id, role: user.role })
+
       // 4. Send token as a response
-      res.send({ message: "Credentials OK!" })
+
+      res.send({ accessToken: token })
     } else {
       // 401
 
@@ -58,7 +65,7 @@ usersRouter.post("/login", async (req, res, next) => {
 })
 
 // 2.
-usersRouter.get("/", async (req, res, next) => {
+usersRouter.get("/", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
   try {
     // throw new Error("KABOOOOOOOOOOOOOOOM!")
     const users = await UsersModel.find()
@@ -68,8 +75,21 @@ usersRouter.get("/", async (req, res, next) => {
   }
 })
 
+usersRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    const currentLoggedInUser = await UsersModel.findById(req.user._id)
+    res.send({ user: currentLoggedInUser })
+  } catch (error) {
+    next(error)
+  }
+})
+
+usersRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {})
+
+usersRouter.delete("/me", JWTAuthMiddleware, async (req, res, next) => {})
+
 // 3.
-usersRouter.get("/:userId", async (req, res, next) => {
+usersRouter.get("/:userId", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
   try {
     const user = await UsersModel.findById(req.params.userId)
     if (user) {
@@ -83,7 +103,7 @@ usersRouter.get("/:userId", async (req, res, next) => {
 })
 
 // 4.
-usersRouter.put("/:userId", async (req, res, next) => {
+usersRouter.put("/:userId", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
   try {
     const updatedUser = await UsersModel.findByIdAndUpdate(
       req.params.userId, // WHO
@@ -101,7 +121,7 @@ usersRouter.put("/:userId", async (req, res, next) => {
 })
 
 // 5.
-usersRouter.delete("/:userId", async (req, res, next) => {
+usersRouter.delete("/:userId", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
   try {
     const deletedUser = await UsersModel.findByIdAndDelete(req.params.userId)
     if (deletedUser) {

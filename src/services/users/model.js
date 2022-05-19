@@ -16,6 +16,7 @@ const usersSchema = new Schema(
     dateOfBirth: { type: Date, required: true },
     password: { type: String, required: true },
     purchaseHistory: [{ title: String, category: String, price: Number, purchaseDate: Date }],
+    role: { type: String, required: true, default: "User", enum: ["User", "Admin"] },
   },
   {
     timestamps: true, // automatically add createdAt and updatedAt fields
